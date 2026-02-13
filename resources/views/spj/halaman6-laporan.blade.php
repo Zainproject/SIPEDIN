@@ -27,54 +27,125 @@
         // ===== PETUGAS =====
         $petugasList = $spt->petugasList();
 
+        // ===== NORMALISASI (AMAN JSON/ARRAY/CSV) =====
+        $norm = function ($val) {
+            if (is_array($val)) {
+                return $val;
+            }
+
+            if (is_string($val)) {
+                $val = trim($val);
+                if ($val === '') {
+                    return [];
+                }
+
+                $decoded = json_decode($val, true);
+                if (is_array($decoded)) {
+                    return $decoded;
+                }
+
+                // fallback csv (pakai ; atau |)
+                $val = str_replace(['|'], ';', $val);
+                return array_values(array_filter(array_map('trim', explode(';', $val))));
+            }
+
+            return [];
+        };
+
+        $tujuan = $norm($spt->tujuan);
+        $poktanNama = $norm($spt->poktan_nama);
+        $deskripsiKota = $norm($spt->deskripsi_kota);
+        $deskripsiLainnya = $norm($spt->deskripsi_lainnya);
+
         // ===== TUJUAN (ringkas seperti contoh) =====
         $tujuanLines = [];
-        if (is_array($spt->tujuan)) {
-            foreach ($spt->tujuan as $i => $tj) {
-                if ($tj === 'kelompok_tani') {
-                    $nama = $spt->poktan_nama[$i] ?? '-';
-                    $tujuanLines[] = str_starts_with(strtoupper(trim($nama)), 'KT.') ? $nama : 'KT. ' . $nama;
-                } elseif ($tj === 'kabupaten_kota') {
-                    $tujuanLines[] = $spt->deskripsi_kota[$i] ?? '-';
-                } elseif ($tj === 'lainnya') {
-                    $tujuanLines[] = $spt->deskripsi_lainnya[$i] ?? '-';
-                }
+        foreach ($tujuan as $i => $tj) {
+            if ($tj === 'kelompok_tani') {
+                $nama = $poktanNama[$i] ?? '-';
+                $tujuanLines[] = str_starts_with(strtoupper(trim($nama)), 'KT.') ? $nama : 'KT. ' . $nama;
+            } elseif ($tj === 'kabupaten_kota') {
+                $tujuanLines[] = $deskripsiKota[$i] ?? '-';
+            } elseif ($tj === 'lainnya') {
+                $tujuanLines[] = $deskripsiLainnya[$i] ?? '-';
             }
         }
 
-        // ===== MAKSUD & TUJUAN (sama seperti halaman SPT) =====
+        // ===== MAKSUD & TUJUAN (SAMA DENGAN HALAMAN SPT/UNTUK) =====
         $tanggalNarasi = $tglBerangkat ? $tglBerangkat->translatedFormat('d F Y') : '-';
-        $listKT = [];
-        $narasiLain = [];
 
-        if (is_array($spt->tujuan)) {
-            foreach ($spt->tujuan as $i => $tj) {
-                if ($tj === 'kelompok_tani') {
-                    $poktan = \App\Models\Poktan::where('nama_poktan', $spt->poktan_nama[$i] ?? null)->first();
-                    $listKT[] =
-                        'KT. ' .
-                        ($poktan->nama_poktan ?? ($spt->poktan_nama[$i] ?? '-')) .
-                        ' Desa ' .
-                        ($poktan->desa ?? '-') .
-                        ' Kecamatan ' .
-                        ($poktan->kecamatan ?? '-');
-                } elseif ($tj === 'kabupaten_kota') {
-                    $narasiLain[] = ($spt->keperluan ?? '-') . ' ke ' . ($spt->deskripsi_kota[$i] ?? '-');
-                } elseif ($tj === 'lainnya') {
-                    $narasiLain[] = ($spt->keperluan ?? '-') . ' ' . ($spt->deskripsi_lainnya[$i] ?? '-');
+        // keperluan dipisah pakai ;
+        $keperluanParts = array_values(array_filter(array_map('trim', explode(';', (string) ($spt->keperluan ?? '')))));
+        $getKeperluan = function ($i) use ($keperluanParts, $spt) {
+            if (count($keperluanParts) === 0) {
+                return (string) ($spt->keperluan ?? '-');
+            }
+            return $keperluanParts[$i] ?? $keperluanParts[0];
+        };
+
+        // grouping + urutan
+        $ktByKep = [];
+        $kabByKep = [];
+        $order = [];
+
+        foreach ($tujuan as $i => $tj) {
+            $kep = $getKeperluan($i);
+
+            if ($tj === 'kelompok_tani') {
+                $namaPoktan = $poktanNama[$i] ?? null;
+
+                $poktan = $namaPoktan ? \App\Models\Poktan::where('nama_poktan', $namaPoktan)->first() : null;
+
+                if ($poktan) {
+                    if (!isset($ktByKep[$kep])) {
+                        $ktByKep[$kep] = [];
+                        $order[] = ['type' => 'kt', 'kep' => $kep];
+                    }
+
+                    $ktByKep[$kep][] =
+                        'KT. ' . $poktan->nama_poktan . ' Desa ' . $poktan->desa . ' Kecamatan ' . $poktan->kecamatan;
+                } else {
+                    // fallback kalau poktan tidak ketemu
+                    if (!isset($ktByKep[$kep])) {
+                        $ktByKep[$kep] = [];
+                        $order[] = ['type' => 'kt', 'kep' => $kep];
+                    }
+                    $ktByKep[$kep][] = 'KT. ' . ($namaPoktan ?? '-');
+                }
+            } elseif ($tj === 'kabupaten_kota') {
+                $kota = trim((string) ($deskripsiKota[$i] ?? ''));
+                if ($kota !== '' && $kota !== '-') {
+                    if (!isset($kabByKep[$kep])) {
+                        $kabByKep[$kep] = [];
+                        $order[] = ['type' => 'kab', 'kep' => $kep];
+                    }
+                    $kabByKep[$kep][] = $kota;
+                }
+            } elseif ($tj === 'lainnya') {
+                $lain = trim((string) ($deskripsiLainnya[$i] ?? ''));
+                if ($lain !== '' && $lain !== '-') {
+                    $order[] = ['type' => 'lain', 'val' => $lain];
                 }
             }
         }
 
-        $narasiKT = null;
-        if (count($listKT) > 0) {
-            $narasiKT = ($spt->keperluan ?? '-') . ' ke ' . implode(' dan ', $listKT) . ' Kabupaten Sumenep';
+        $segments = [];
+        foreach ($order as $o) {
+            if ($o['type'] === 'kt') {
+                $kep = $o['kep'];
+                $segments[] = $kep . ' ke ' . implode(' dan ', $ktByKep[$kep]) . ' Kabupaten Sumenep';
+            }
+            if ($o['type'] === 'kab') {
+                $kep = $o['kep'];
+                $segments[] = $kep . ' ke ' . implode(' dan ', $kabByKep[$kep]);
+            }
+            if ($o['type'] === 'lain') {
+                $segments[] = $o['val']; // langsung
+            }
         }
 
-        $finalNarasi = array_filter(array_merge([$narasiKT], $narasiLain));
-        $maksudTujuanText = count($finalNarasi)
-            ? ucfirst(implode(' dan ', $finalNarasi)) . ' pada ' . $tanggalNarasi . '.'
-            : '-';
+        $finalNarasiStr = trim(implode(' dan ', $segments));
+
+        $maksudTujuanText = $finalNarasiStr !== '' ? ucfirst($finalNarasiStr) . ' pada ' . $tanggalNarasi . '.' : '-';
 
         // ===== STEP 4: buang kosong & buang "-" supaya tidak jadi "1. -" =====
         $cleanList = function ($arr) {

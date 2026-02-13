@@ -44,35 +44,47 @@ class PoktanController extends Controller
         return view('Datapoktan.tambahpoktan');
     }
 
+    /* =======================
+     * STORE
+     * ======================= */
     public function store(Request $request)
     {
-        $request->validate([
-            'nama_poktan' => 'required|string|max:255|unique:poktan,nama_poktan',
-            'ketua'       => 'required|string|max:20',
-            'desa'        => 'required|string|max:100',
-            'kecamatan'   => 'required|string|max:100',
-        ]);
+        try {
 
-        $poktan = Poktan::create($request->only(['nama_poktan', 'ketua', 'desa', 'kecamatan']));
+            $request->validate([
+                'nama_poktan' => 'required|string|max:255|unique:poktan,nama_poktan',
+                'ketua'       => 'required|string|max:255',
+                'desa'        => 'required|string|max:100',
+                'kecamatan'   => 'required|string|max:100',
+            ], [
+                'nama_poktan.unique' => 'Nama Poktan sudah terdaftar di database!',
+            ]);
 
-        // LOG AKTIVITAS (CREATE)
-        $this->logActivity($request, 'create', 'Menambah data di Data Poktan', [
-            'id'         => $poktan->id,
-            'nama_poktan' => $poktan->nama_poktan,
-            'ketua'      => $poktan->ketua,
-            'desa'       => $poktan->desa,
-            'kecamatan'  => $poktan->kecamatan,
-        ]);
+            $poktan = Poktan::create(
+                $request->only(['nama_poktan', 'ketua', 'desa', 'kecamatan'])
+            );
 
-        return redirect()->route('poktan.index')
-            ->with('success', 'Data Poktan berhasil ditambahkan');
+            // LOG AKTIVITAS (CREATE)
+            $this->logActivity($request, 'create', 'Menambah data di Data Poktan', [
+                'id'          => $poktan->id,
+                'nama_poktan' => $poktan->nama_poktan,
+                'ketua'       => $poktan->ketua,
+                'desa'        => $poktan->desa,
+                'kecamatan'   => $poktan->kecamatan,
+            ]);
+
+            return redirect()->route('poktan.index')
+                ->with('success', 'Data Poktan berhasil ditambahkan');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+
+            return redirect()->back()
+                ->withErrors($e->validator)
+                ->withInput();
+        }
     }
 
     public function show(string $id)
     {
-        // Kalau kamu tidak butuh halaman detail, bisa samakan seperti SPT:
-        // return redirect()->route('poktan.index');
-
         $poktan = Poktan::findOrFail($id);
         return view('Datapoktan.showpoktan', compact('poktan'));
     }
@@ -83,35 +95,50 @@ class PoktanController extends Controller
         return view('Datapoktan.editpoktan', compact('poktan'));
     }
 
+    /* =======================
+     * UPDATE
+     * ======================= */
     public function update(Request $request, string $id)
     {
         $poktan = Poktan::findOrFail($id);
 
-        $request->validate([
-            'nama_poktan' => [
-                'required',
-                'string',
-                'max:255',
-                Rule::unique('poktan', 'nama_poktan')->ignore($poktan->nama_poktan, 'nama_poktan'),
-            ],
-            'ketua'     => 'required|string|max:20',
-            'desa'      => 'required|string|max:100',
-            'kecamatan' => 'required|string|max:100',
-        ]);
+        try {
 
-        $poktan->update($request->only(['nama_poktan', 'ketua', 'desa', 'kecamatan']));
+            $request->validate([
+                'nama_poktan' => [
+                    'required',
+                    'string',
+                    'max:255',
+                    Rule::unique('poktan', 'nama_poktan')->ignore($poktan->id),
+                ],
+                'ketua'     => 'required|string|max:255',
+                'desa'      => 'required|string|max:100',
+                'kecamatan' => 'required|string|max:100',
+            ], [
+                'nama_poktan.unique' => 'Nama Poktan sudah digunakan!',
+            ]);
 
-        // LOG AKTIVITAS (UPDATE)
-        $this->logActivity($request, 'update', 'Mengubah data di Data Poktan', [
-            'id'         => $poktan->id,
-            'nama_poktan' => $poktan->nama_poktan,
-            'ketua'      => $poktan->ketua,
-            'desa'       => $poktan->desa,
-            'kecamatan'  => $poktan->kecamatan,
-        ]);
+            $poktan->update(
+                $request->only(['nama_poktan', 'ketua', 'desa', 'kecamatan'])
+            );
 
-        return redirect()->route('poktan.index')
-            ->with('success', 'Data berhasil diupdate');
+            // LOG AKTIVITAS (UPDATE)
+            $this->logActivity($request, 'update', 'Mengubah data di Data Poktan', [
+                'id'          => $poktan->id,
+                'nama_poktan' => $poktan->nama_poktan,
+                'ketua'       => $poktan->ketua,
+                'desa'        => $poktan->desa,
+                'kecamatan'   => $poktan->kecamatan,
+            ]);
+
+            return redirect()->route('poktan.index')
+                ->with('success', 'Data berhasil diupdate');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+
+            return redirect()->back()
+                ->withErrors($e->validator)
+                ->withInput();
+        }
     }
 
     public function destroy(Request $request, string $id)
@@ -119,11 +146,11 @@ class PoktanController extends Controller
         $poktan = Poktan::findOrFail($id);
 
         $info = [
-            'id'         => $poktan->id,
+            'id'          => $poktan->id,
             'nama_poktan' => $poktan->nama_poktan,
-            'ketua'      => $poktan->ketua,
-            'desa'       => $poktan->desa,
-            'kecamatan'  => $poktan->kecamatan,
+            'ketua'       => $poktan->ketua,
+            'desa'        => $poktan->desa,
+            'kecamatan'   => $poktan->kecamatan,
         ];
 
         $poktan->delete();

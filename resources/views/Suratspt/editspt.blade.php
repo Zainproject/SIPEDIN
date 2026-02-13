@@ -211,7 +211,17 @@
                                 <label for="keperluan">Keperluan</label>
                                 <input type="text" name="keperluan" class="form-control"
                                     value="{{ old('keperluan', $spt->keperluan) }}" required>
+
+                                <small class="form-text text-muted">
+                                    Jika tujuan lebih dari satu (misalnya Kelompok Tani dan Kabupaten/Kota),
+                                    pisahkan keperluan dengan tanda <b>;</b>.
+                                    <br>
+                                    Contoh: <i>Observasi Lapangan; Kunjungan belajar</i>
+                                    <br>
+                                    (Bagian pertama untuk tujuan pertama, bagian kedua untuk tujuan berikutnya).
+                                </small>
                             </div>
+
 
                             <button type="button" class="btn btn-primary next-step">Lanjut</button>
                         </div>

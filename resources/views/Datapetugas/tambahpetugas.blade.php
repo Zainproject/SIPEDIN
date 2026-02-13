@@ -43,4 +43,11 @@
             </a>
         </form>
     </div>
+    @if ($errors->any())
+        <script>
+            document.addEventListener("DOMContentLoaded", function() {
+                alert(@json($errors->first()));
+            });
+        </script>
+    @endif
 @endsection

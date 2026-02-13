@@ -8,26 +8,41 @@
 
         <form action="{{ route('poktan.store') }}" method="POST">
             @csrf
+
             <div class="form-group">
-                <label for="nama">Nama Poktan</label>
-                <input type="text" class="form-control" id="nama_poktan" name="nama_poktan"
-                    placeholder="Masukkan Nama Poktan">
+                <label for="nama_poktan">Nama Poktan</label>
+                <input type="text" class="form-control @error('nama_poktan') is-invalid @enderror" id="nama_poktan"
+                    name="nama_poktan" value="{{ old('nama_poktan') }}" placeholder="Masukkan Nama Poktan">
+                @error('nama_poktan')
+                    <div class="invalid-feedback">{{ $message }}</div>
+                @enderror
             </div>
 
             <div class="form-group">
-                <label for="nip">Nama Ketua</label>
-                <input type="text" class="form-control" id="ketua" name="ketua" placeholder="Masukkan Nama Ketua">
+                <label for="ketua">Nama Ketua</label>
+                <input type="text" class="form-control @error('ketua') is-invalid @enderror" id="ketua"
+                    name="ketua" value="{{ old('ketua') }}" placeholder="Masukkan Nama Ketua">
+                @error('ketua')
+                    <div class="invalid-feedback">{{ $message }}</div>
+                @enderror
             </div>
 
             <div class="form-group">
-                <label for="pangkat">Desa</label>
-                <input type="text" class="form-control" id="desa" name="desa" placeholder="Masukkan Nama Desa">
+                <label for="desa">Desa</label>
+                <input type="text" class="form-control @error('desa') is-invalid @enderror" id="desa" name="desa"
+                    value="{{ old('desa') }}" placeholder="Masukkan Nama Desa">
+                @error('desa')
+                    <div class="invalid-feedback">{{ $message }}</div>
+                @enderror
             </div>
 
             <div class="form-group">
-                <label for="jabatan">Kecamatan</label>
-                <input type="text" class="form-control" id="kecamatan" name="kecamatan"
-                    placeholder="Masukkan Nama Kecamatan">
+                <label for="kecamatan">Kecamatan</label>
+                <input type="text" class="form-control @error('kecamatan') is-invalid @enderror" id="kecamatan"
+                    name="kecamatan" value="{{ old('kecamatan') }}" placeholder="Masukkan Nama Kecamatan">
+                @error('kecamatan')
+                    <div class="invalid-feedback">{{ $message }}</div>
+                @enderror
             </div>
 
             <button type="submit" class="btn btn-success btn-icon-split">
@@ -44,5 +59,17 @@
                 <span class="text">Kembali</span>
             </a>
         </form>
+
     </div>
+
+    {{-- ========================
+     ALERT JS ERROR
+======================== --}}
+    @if ($errors->any())
+        <script>
+            document.addEventListener("DOMContentLoaded", function() {
+                alert(@json($errors->first()));
+            });
+        </script>
+    @endif
 @endsection

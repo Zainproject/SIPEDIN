@@ -24,7 +24,13 @@
 
     <div id="content">
         <div class="container-fluid">
-            <h1 class="h3 mb-2 text-gray-800">Tambah Data SPT</h1>
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h1 class="h3 mb-0 text-gray-800">Tambah Data SPT</h1>
+
+                <a href="{{ route('spt.index') }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Kembali
+                </a>
+            </div>
 
             <div class="card shadow mb-4">
                 <div class="card-body">
@@ -111,7 +117,16 @@
                                 <label for="keperluan">Keperluan</label>
                                 <input type="text" name="keperluan" class="form-control" value="{{ old('keperluan') }}"
                                     required>
+
+                                <small class="form-text text-muted">
+                                    Jika tujuan lebih dari satu (contoh: Kelompok Tani dan Kabupaten/Kota), pisahkan
+                                    keperluan dengan tanda <b>;</b>.
+                                    <br>
+                                    Contoh: <i>Observasi Lapangan; Kunjungan belajar</i> (bagian pertama untuk tujuan 1,
+                                    bagian kedua untuk tujuan 2).
+                                </small>
                             </div>
+
 
                             <button type="button" class="btn btn-primary next-step">Lanjut</button>
                         </div>

@@ -56,7 +56,7 @@
 
                 $destinations[] = [
                     'label' => $kota,
-                    'ketua' => '', // bukan poktan -> nanti tampil titik
+                    'ketua' => '', // bukan poktan
                     'jenis' => 'kota',
                 ];
             } elseif ($tj === 'lainnya') {
@@ -67,7 +67,7 @@
 
                 $destinations[] = [
                     'label' => $lain,
-                    'ketua' => '', // bukan poktan -> nanti tampil titik
+                    'ketua' => '', // bukan poktan
                     'jenis' => 'lainnya',
                 ];
             }
@@ -83,15 +83,18 @@
         $tujuan1 = $d1['label'];
         $tujuan2 = $d2['label'];
 
-        // ====== KETUA: jika poktan pakai nama ketua, selain itu titik-titik ======
+        // ====== KETUA: poktan -> nama ketua + "Ketua", selain itu titik saja ======
         $dotsKetua = '................................';
-        $ketua1 = $d1['jenis'] === 'poktan' ? (trim((string) ($d1['ketua'] ?? '')) ?: $dotsKetua) : $dotsKetua;
-        $ketua2 = $d2['jenis'] === 'poktan' ? (trim((string) ($d2['ketua'] ?? '')) ?: $dotsKetua) : $dotsKetua;
+
+        $isPoktan1 = $d1['jenis'] === 'poktan';
+        $isPoktan2 = $d2['jenis'] === 'poktan';
+
+        $ketua1 = $isPoktan1 ? (trim((string) ($d1['ketua'] ?? '')) ?: $dotsKetua) : $dotsKetua;
+        $ketua2 = $isPoktan2 ? (trim((string) ($d2['ketua'] ?? '')) ?: $dotsKetua) : $dotsKetua;
 
         $tujuanSetelah1 = $tujuan2 ?: $tempatAwal;
 
-        // ====== NOMOR (URUT, kalau tujuan cuma 1 maka setelah II langsung ke III untuk blok kosong) ======
-        // Default: ada tujuan2 -> III dipakai untuk tujuan2
+        // ====== NOMOR ======
         $noI = 'I.';
         $noII = 'II.';
         $noIII = 'III.';
@@ -101,7 +104,6 @@
         $noVII = 'VII.';
         $noVIII = 'VIII.';
 
-        // Kalau tidak ada tujuan2: blok tujuan2 (III) hilang, maka blok kosong naik jadi III dan IV, dst tetap urut
         if ($countTujuan < 2) {
             $noIII = 'III.'; // dipakai untuk ROW IV (kosong)
             $noIV = 'IV.'; // dipakai untuk ROW V (kosong)
@@ -145,11 +147,6 @@
         .sppd-wrap .ttd-center {
             text-align: center;
             line-height: 1.15;
-        }
-
-        .sppd-wrap .nama-underline {
-            font-weight: bold;
-            text-decoration: underline;
         }
 
         /* Supaya posisi nama/ketua seperti gambar (agak ke bawah dan center) */
@@ -202,8 +199,7 @@
                         <td>
                             <table width="100%" cellpadding="0" cellspacing="0">
                                 <tr>
-                                    <td class="lbl">Berangkat dari <br>Tempat Kedudukan
-                                    </td>
+                                    <td class="lbl">Berangkat dari <br>Tempat Kedudukan</td>
                                     <td class="mid">:</td>
                                     <td>{{ $tempatAwal }}</td>
                                 </tr>
@@ -218,11 +214,6 @@
                                     <td class="mid">:</td>
                                     <td>{{ $tgl }}</td>
                                 </tr>
-                                <tr>
-                                    <td>Alat Angkut</td>
-                                    <td class="mid">:</td>
-                                    <td>{{ $alatAngkut }}</td>
-                                </tr>
                             </table>
 
                             An. Kuasa Pengguna Anggaran<br>
@@ -232,9 +223,7 @@
 
                             <div class="ttd-spacer"></div>
 
-                            <div class="ttd-center">
-
-                            </div>
+                            <div class="ttd-center"></div>
                         </td>
                     </tr>
                 </table>
@@ -269,8 +258,12 @@
                             <div class="ttd-spacer"></div>
 
                             <div class="ttd-center"><br>
-                                <b>{{ $ketua1 }}</b><br>
-                                Ketua
+                                @if ($isPoktan1)
+                                    <b>{{ $ketua1 }}</b><br>
+                                    Ketua
+                                @else
+                                    <div class="dots">{{ $dotsKetua }}</div>
+                                @endif
                             </div>
                         </td>
                     </tr>
@@ -307,8 +300,12 @@
                             <div class="ttd-spacer"></div>
 
                             <div class="ttd-center">
-                                <b>{{ $ketua1 }}</b><br>
-                                Ketua
+                                @if ($isPoktan1)
+                                    <b>{{ $ketua1 }}</b><br>
+                                    Ketua
+                                @else
+                                    <div class="dots">{{ $dotsKetua }}</div>
+                                @endif
                             </div>
                         </td>
                     </tr>
@@ -345,8 +342,12 @@
                                 <div class="ttd-spacer"></div>
 
                                 <div class="ttd-center"><br><br>
-                                    <b>{{ $ketua2 }}</b><br>
-                                    Ketua
+                                    @if ($isPoktan2)
+                                        <b>{{ $ketua2 }}</b><br>
+                                        Ketua
+                                    @else
+                                        <div class="dots">{{ $dotsKetua }}</div>
+                                    @endif
                                 </div>
                             </td>
                         </tr>
@@ -383,8 +384,12 @@
                                 <div class="ttd-spacer"></div>
 
                                 <div class="ttd-center"><br>
-                                    <b>{{ $ketua2 }}</b><br>
-                                    Ketua
+                                    @if ($isPoktan2)
+                                        <b>{{ $ketua2 }}</b><br>
+                                        Ketua
+                                    @else
+                                        <div class="dots">{{ $dotsKetua }}</div>
+                                    @endif
                                 </div>
                             </td>
                         </tr>
@@ -535,7 +540,7 @@
                                 </tr>
                             </table>
 
-                            <br><br>
+                            <br>
                             An. Kuasa Pengguna Anggaran<br>
                             Pejabat Pembuat Komitmen (PPK) <br>
                             <div class="nama">{{ strtoupper($namaPejabat) }}</div>
@@ -543,9 +548,7 @@
 
                             <div class="ttd-spacer"></div>
 
-                            <div class="ttd-center">
-
-                            </div>
+                            <div class="ttd-center"></div>
                         </td>
                     </tr>
                 </table>
@@ -563,9 +566,7 @@
 
                 <div class="ttd-spacer"></div>
 
-                <div class="ttd-center">
-
-                </div>
+                <div class="ttd-center"></div>
             </td>
         </tr>
 

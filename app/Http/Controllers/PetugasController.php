@@ -34,7 +34,7 @@ class PetugasController extends Controller
 
     public function index()
     {
-        $petugas = \App\Models\Petugas::orderBy('created_at', 'desc')->get();
+        $petugas = Petugas::orderBy('created_at', 'desc')->get();
         return view('Datapetugas.Datapetugas', compact('petugas'));
     }
 
@@ -43,36 +43,51 @@ class PetugasController extends Controller
         return view('Datapetugas.tambahpetugas');
     }
 
+    /* =======================
+     * STORE
+     * ======================= */
     public function store(Request $request)
     {
-        $request->validate([
-            'nama'    => 'required|string|max:255',
-            'nip'     => 'required|string|max:20|unique:petugas,nip',
-            'pangkat' => 'required|string|max:100',
-            'jabatan' => 'required|string|max:100',
-        ]);
+        try {
 
-        $petugas = Petugas::create($request->only(['nama', 'nip', 'pangkat', 'jabatan']));
+            $request->validate([
+                'nama'    => 'required|string|max:255',
+                'nip'     => 'required|string|max:20|unique:petugas,nip',
+                'pangkat' => 'required|string|max:100',
+                'jabatan' => 'required|string|max:100',
+            ], [
+                'nip.unique' => 'NIP sudah terdaftar di database!',
+            ]);
 
-        // LOG AKTIVITAS (CREATE)
-        $this->logActivity($request, 'create', 'Menambah data di Data Petugas', [
-            'id'      => $petugas->id,
-            'nama'    => $petugas->nama,
-            'nip'     => $petugas->nip,
-            'pangkat' => $petugas->pangkat,
-            'jabatan' => $petugas->jabatan,
-        ]);
+            $petugas = Petugas::create(
+                $request->only(['nama', 'nip', 'pangkat', 'jabatan'])
+            );
 
-        return redirect()->route('petugas.index')
-            ->with('success', 'Data petugas berhasil ditambahkan');
+            // LOG AKTIVITAS (CREATE)
+            $this->logActivity($request, 'create', 'Menambah data di Data Petugas', [
+                'id'      => $petugas->id,
+                'nama'    => $petugas->nama,
+                'nip'     => $petugas->nip,
+                'pangkat' => $petugas->pangkat,
+                'jabatan' => $petugas->jabatan,
+            ]);
+
+            return redirect()->route('petugas.index')
+                ->with('success', 'Data petugas berhasil ditambahkan');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+
+            // Kembali ke form dengan error
+            return redirect()->back()
+                ->withErrors($e->validator)
+                ->withInput();
+        }
     }
 
     /* =======================
-     * SHOW (WAJIB ADA karena Route::resource)
+     * SHOW
      * ======================= */
     public function show(Petugas $petugas)
     {
-        // biar tidak nyasar ke halaman lain, diarahkan ke index
         return redirect()->route('petugas.index');
     }
 
@@ -81,34 +96,47 @@ class PetugasController extends Controller
         return view('Datapetugas.editpetugas', compact('petugas'));
     }
 
+    /* =======================
+     * UPDATE
+     * ======================= */
     public function update(Request $request, Petugas $petugas)
     {
-        $request->validate([
-            'nama'    => 'required|string|max:255',
-            'nip'     => [
-                'required',
-                'string',
-                'max:20',
-                Rule::unique('petugas')->ignore($petugas->nip, 'nip'),
-            ],
-            'pangkat' => 'required|string|max:100',
-            'jabatan' => 'required|string|max:100',
-        ]);
+        try {
 
-        $petugas->update($request->only(['nama', 'nip', 'pangkat', 'jabatan']));
+            $request->validate([
+                'nama'    => 'required|string|max:255',
+                'nip'     => [
+                    'required',
+                    'string',
+                    'max:20',
+                    Rule::unique('petugas', 'nip')->ignore($petugas->nip, 'nip'),
+                ],
+                'pangkat' => 'required|string|max:100',
+                'jabatan' => 'required|string|max:100',
+            ], [
+                'nip.unique' => 'NIP sudah digunakan petugas lain!',
+            ]);
 
-        // LOG AKTIVITAS (UPDATE)
-        $this->logActivity($request, 'update', 'Mengubah data di Data Petugas', [
-            'id'      => $petugas->id,
-            'nama'    => $petugas->nama,
-            'nip'     => $petugas->nip,
-            'pangkat' => $petugas->pangkat,
-            'jabatan' => $petugas->jabatan,
-        ]);
+            $petugas->update($request->only(['nama', 'nip', 'pangkat', 'jabatan']));
 
-        return redirect()->route('petugas.index')
-            ->with('success', 'Data berhasil diupdate');
+            $this->logActivity($request, 'update', 'Mengubah data di Data Petugas', [
+                'id'      => $petugas->id ?? null,
+                'nama'    => $petugas->nama,
+                'nip'     => $petugas->nip,
+                'pangkat' => $petugas->pangkat,
+                'jabatan' => $petugas->jabatan,
+            ]);
+
+            return redirect()->route('petugas.index')
+                ->with('success', 'Data berhasil diupdate');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+
+            return redirect()->back()
+                ->withErrors($e->validator)
+                ->withInput();
+        }
     }
+
 
     public function destroy(Request $request, Petugas $petugas)
     {

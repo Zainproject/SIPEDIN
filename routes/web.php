@@ -15,11 +15,7 @@ use App\Http\Controllers\ImportController;
 use App\Http\Controllers\ProfileController;
 
 /*
-|--------------------------------------------------------------------------
 | ROOT
-|--------------------------------------------------------------------------
-| Kalau belum login -> login
-| Kalau sudah login -> home (/index)
 */
 
 Route::get('/', function () {
@@ -29,43 +25,39 @@ Route::get('/', function () {
 });
 
 /*
-|--------------------------------------------------------------------------
-| DASHBOARD (Breeze default)
-|--------------------------------------------------------------------------
-| Breeze default redirect ke /dashboard
-| kita arahkan ke /index
+| DASHBOARD
 */
 Route::middleware('auth')->get('/dashboard', function () {
     return redirect()->route('home');
 })->name('dashboard');
 
 /*
-|--------------------------------------------------------------------------
 | SEMUA FITUR (WAJIB LOGIN)
-|--------------------------------------------------------------------------
 */
 Route::middleware('auth')->group(function () {
 
-    /*
-    | Dashboard utama aplikasi
-    */
     Route::get('/index', [DashboardController::class, 'index'])->name('home');
 
     /*
     | MASTER DATA
+    | (paksa nama parameter route biar konsisten)
     */
-    Route::resource('petugas', PetugasController::class);
-    Route::resource('poktan', PoktanController::class);
-    Route::resource('pejabat', PejabatController::class);
+    Route::resource('petugas', PetugasController::class)
+        ->parameters(['petugas' => 'petugas']);
+
+    Route::resource('poktan', PoktanController::class)
+        ->parameters(['poktan' => 'poktan']);
+
+    Route::resource('pejabat', PejabatController::class)
+        ->parameters(['pejabat' => 'pejabat']);
 
     /*
     | SPT
     */
-    Route::resource('spt', SptController::class)->except(['show']);
+    Route::resource('spt', SptController::class)
+        ->except(['show'])
+        ->parameters(['spt' => 'spt']);
 
-    // Print:
-    // - /spt/print        -> print all (id null)
-    // - /spt/print/123    -> print single
     Route::get('spt/print/{id?}', [SptController::class, 'print'])->name('spt.print');
 
     /*
@@ -84,22 +76,17 @@ Route::middleware('auth')->group(function () {
         Route::match(['POST', 'DELETE'], '/clear', [ActivityController::class, 'clear'])->name('clear');
     });
 
-    // Alias supaya tidak error kalau ada pemanggilan route lama
     Route::match(['POST', 'DELETE'], '/activities/destroy-all', [ActivityController::class, 'clear'])
         ->name('activities.destroyAll');
 
     /*
-    | SEARCH (LIVE SEARCH)
-    | IMPORTANT:
-    | - route('search')        -> untuk kompatibel dengan menu lama kamu
-    | - route('search.index')  -> versi rapi
-    | - route('search.results')-> endpoint JSON
+    | SEARCH
     */
-    Route::get('/search', [SearchController::class, 'index'])->name('search'); // ✅ FIX ERROR Route [search] not defined
+    Route::get('/search', [SearchController::class, 'index'])->name('search');
 
     Route::prefix('search')->name('search.')->group(function () {
-        Route::get('/', [SearchController::class, 'index'])->name('index');     // /search
-        Route::get('/results', [SearchController::class, 'results'])->name('results'); // /search/results
+        Route::get('/', [SearchController::class, 'index'])->name('index');
+        Route::get('/results', [SearchController::class, 'results'])->name('results');
     });
 
     /*
@@ -123,8 +110,6 @@ Route::middleware('auth')->group(function () {
 });
 
 /*
-|--------------------------------------------------------------------------
-| AUTH ROUTES (BREEZE)
-|--------------------------------------------------------------------------
+| AUTH ROUTES
 */
 require __DIR__ . '/auth.php';

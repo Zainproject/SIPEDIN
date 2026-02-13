@@ -12,26 +12,50 @@
 
             <div class="form-group">
                 <label for="nama">Nama</label>
-                <input type="text" class="form-control" id="nama" name="nama"
+                <input type="text" class="form-control @error('nama') is-invalid @enderror" id="nama" name="nama"
                     value="{{ old('nama', $petugas->nama) }}" placeholder="Masukkan Nama">
+
+                @error('nama')
+                    <div class="invalid-feedback">
+                        {{ $message }}
+                    </div>
+                @enderror
             </div>
 
             <div class="form-group">
                 <label for="nip">NIP</label>
-                <input type="text" class="form-control" id="nip" name="nip"
+                <input type="text" class="form-control @error('nip') is-invalid @enderror" id="nip" name="nip"
                     value="{{ old('nip', $petugas->nip) }}" placeholder="Masukkan NIP">
+
+                @error('nip')
+                    <div class="invalid-feedback">
+                        {{ $message }}
+                    </div>
+                @enderror
             </div>
 
             <div class="form-group">
                 <label for="pangkat">Pangkat/Gol</label>
-                <input type="text" class="form-control" id="pangkat" name="pangkat"
-                    value="{{ old('pangkat', $petugas->pangkat) }}" placeholder="Masukkan Pangkat/Gol">
+                <input type="text" class="form-control @error('pangkat') is-invalid @enderror" id="pangkat"
+                    name="pangkat" value="{{ old('pangkat', $petugas->pangkat) }}" placeholder="Masukkan Pangkat/Gol">
+
+                @error('pangkat')
+                    <div class="invalid-feedback">
+                        {{ $message }}
+                    </div>
+                @enderror
             </div>
 
             <div class="form-group">
                 <label for="jabatan">Jabatan</label>
-                <input type="text" class="form-control" id="jabatan" name="jabatan"
-                    value="{{ old('jabatan', $petugas->jabatan) }}" placeholder="Masukkan Jabatan">
+                <input type="text" class="form-control @error('jabatan') is-invalid @enderror" id="jabatan"
+                    name="jabatan" value="{{ old('jabatan', $petugas->jabatan) }}" placeholder="Masukkan Jabatan">
+
+                @error('jabatan')
+                    <div class="invalid-feedback">
+                        {{ $message }}
+                    </div>
+                @enderror
             </div>
 
             <button type="submit" class="btn btn-warning btn-icon-split">
@@ -49,5 +73,17 @@
                 <span class="text">Kembali</span>
             </a>
         </form>
+
     </div>
+
+    {{-- ========================
+     ALERT JS ERROR
+======================== --}}
+    @if ($errors->any())
+        <script>
+            document.addEventListener("DOMContentLoaded", function() {
+                alert(@json($errors->first()));
+            });
+        </script>
+    @endif
 @endsection

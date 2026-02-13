@@ -11,27 +11,53 @@
             @method('PUT')
 
             <div class="form-group">
-                <label for="nama">Nama Poktan</label>
-                <input type="text" class="form-control" id="nama_poktan" name="nama_poktan"
-                    value="{{ old('nama_poktan', $poktan->nama_poktan) }}" placeholder="Masukkan Nama Poktan">
+                <label for="nama_poktan">Nama Poktan</label>
+                <input type="text" class="form-control @error('nama_poktan') is-invalid @enderror" id="nama_poktan"
+                    name="nama_poktan" value="{{ old('nama_poktan', $poktan->nama_poktan) }}"
+                    placeholder="Masukkan Nama Poktan">
+
+                @error('nama_poktan')
+                    <div class="invalid-feedback">
+                        {{ $message }}
+                    </div>
+                @enderror
             </div>
 
             <div class="form-group">
-                <label for="nip">Ketua</label>
-                <input type="text" class="form-control" id="ketua" name="ketua"
-                    value="{{ old('ketua', $poktan->ketua) }}" placeholder="Masukkan Nama Ketua">
+                <label for="ketua">Ketua</label>
+                <input type="text" class="form-control @error('ketua') is-invalid @enderror" id="ketua"
+                    name="ketua" value="{{ old('ketua', $poktan->ketua) }}" placeholder="Masukkan Nama Ketua">
+
+                @error('ketua')
+                    <div class="invalid-feedback">
+                        {{ $message }}
+                    </div>
+                @enderror
             </div>
 
             <div class="form-group">
-                <label for="pangkat">Desa</label>
-                <input type="text" class="form-control" id="desa" name="desa"
+                <label for="desa">Desa</label>
+                <input type="text" class="form-control @error('desa') is-invalid @enderror" id="desa" name="desa"
                     value="{{ old('desa', $poktan->desa) }}" placeholder="Masukkan Nama Desa">
+
+                @error('desa')
+                    <div class="invalid-feedback">
+                        {{ $message }}
+                    </div>
+                @enderror
             </div>
 
             <div class="form-group">
-                <label for="jabatan">Kecamatan</label>
-                <input type="text" class="form-control" id="kecamatan" name="kecamatan"
-                    value="{{ old('kecamatan', $poktan->kecamatan) }}" placeholder="Masukkan Nama Kecamatan">
+                <label for="kecamatan">Kecamatan</label>
+                <input type="text" class="form-control @error('kecamatan') is-invalid @enderror" id="kecamatan"
+                    name="kecamatan" value="{{ old('kecamatan', $poktan->kecamatan) }}"
+                    placeholder="Masukkan Nama Kecamatan">
+
+                @error('kecamatan')
+                    <div class="invalid-feedback">
+                        {{ $message }}
+                    </div>
+                @enderror
             </div>
 
             <button type="submit" class="btn btn-warning btn-icon-split">
@@ -50,4 +76,15 @@
             </a>
         </form>
     </div>
+
+    {{-- ========================
+         ALERT JS ERROR
+    ========================= --}}
+    @if ($errors->any())
+        <script>
+            document.addEventListener("DOMContentLoaded", function() {
+                alert(@json($errors->first()));
+            });
+        </script>
+    @endif
 @endsection
